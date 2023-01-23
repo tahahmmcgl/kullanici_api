@@ -54,3 +54,14 @@ func (server *Server) SignIn(email, password string) (string, error) {
 	}
 	return auth.CreateToken(user.ID)
 }
+func (server *Server) IsAdminUser() (bool, error) {
+	user := models.User{}
+	err := server.DB.Debug().Model(models.User{}).Where("id = ?", user.ID).Take(&user).Error
+	if err != nil {
+		return false, err
+	}
+	if user.Role == 1 {
+		return true, nil
+	}
+	return false, nil
+}

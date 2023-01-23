@@ -17,17 +17,26 @@ type User struct {
 	Password  string    `gorm:"type:varchar(100);not null"json:"password"`
 	CreatedAt time.Time `gorm:"default:'0000-00-00 00:00:00'"json:"created_at"`
 	UpdatedAt time.Time `gorm:"default:'0000-00-00 00:00:00'"json:"updated_at"`
+	Role      uint8     `gorm:"default:0"json:"role"`
+}
+type Role struct {
+	ID       uint   `gorm:"primary key:auto_increment"json:"id:`
+	UserRole string `gorm:"type:varchar(100);nut null;unique"json:"user_role"`
 }
 
 var err error
 
+//prepara fonksiyonu ile kullanıcıdan gelen verileri temizliyoruz
 func (u *User) Prepare() {
 	u.ID = 0
 	u.Username = html.EscapeString(strings.TrimSpace(u.Username))
 	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
+	u.Role = 0
 }
+
+//validate fonksiyonu ile kullanıcıdan gelen verileri kontrol ediyoruz
 func (u *User) Validate(action string) error {
 	switch strings.ToLower(action) {
 	case "update":
@@ -63,13 +72,16 @@ func (u *User) Validate(action string) error {
 	}
 }
 func (u *User) SaveUser(db *gorm.DB) (*User, error) {
-	err = db.Debug().Create(&u).Error
-	if err != nil {
-		return &User{}, err
+	if u.Role == 1 {
+		err = db.Debug().Create(&u).Error
+		if err != nil {
+			return &User{}, err
+		}
+		return u, nil
+	} else {
+		return &User{}, errors.New("You are not authorized to create a user")
 	}
-	return u, nil
 }
-
 func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
 	users := []User{}
 	err = db.Debug().Model(&User{}).Limit(100).Find(&users).Error

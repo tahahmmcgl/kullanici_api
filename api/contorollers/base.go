@@ -34,6 +34,8 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 	//database migration
 	//database tablolarını oluşturmak için kullanılır
 	server.DB.AutoMigrate(&models.User{})
+	server.DB.AutoMigrate(&models.Task{})
+	server.DB.AutoMigrate(&models.Role{})
 	//server.DB.Debug().AutoMigrate(&models.User{})
 	server.Router = mux.NewRouter()
 

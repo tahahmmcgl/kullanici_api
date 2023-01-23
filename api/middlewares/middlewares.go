@@ -33,7 +33,7 @@ func SetMiddlewareAuthentication(next http.HandlerFunc) http.HandlerFunc {
 //setmiddlewarelogger loglama için kullanılır
 func SetMiddlewareLogger(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Print("middleware çalıştı")
+		fmt.Println("middleware çalıştı")
 		log.Println("%s %s%s %s", r.Method, r.Host, r.RequestURI, r.Proto)
 		next(w, r)
 	}
