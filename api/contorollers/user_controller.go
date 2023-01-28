@@ -16,34 +16,54 @@ import (
 )
 
 func (server *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
+	user := models.User{}
+	LoginedUser := models.User{}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 	}
-	user := models.User{}
 	err = json.Unmarshal(body, &user)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
+	tokenID, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+	LoginUserRole, err := LoginedUser.FindUserByID(server.DB, uint32(tokenID))
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+
 	user.Prepare()
 	err = user.Validate("")
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	userCreated, err := user.SaveUser(server.DB)
 
-	if err != nil {
+	if LoginUserRole.Role == 2 {
+		userCreated, err := user.SaveUser(server.DB)
 
-		formattedError := utils.FormatError(err.Error())
+		if err != nil {
 
-		responses.ERROR(w, http.StatusInternalServerError, formattedError)
+			formattedError := utils.FormatError(err.Error())
+
+			responses.ERROR(w, http.StatusInternalServerError, formattedError)
+			return
+		}
+		w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, userCreated.ID))
+		responses.JSON(w, http.StatusCreated, userCreated)
+	} else {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Lütfen Admin Yetkisine Sahip Olunuz"))
 		return
+
 	}
-	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, userCreated.ID))
-	responses.JSON(w, http.StatusCreated, userCreated)
+
 }
 
 func (server *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +96,22 @@ func (server *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
-
+	//Check if the auth token is valid
+	tokenID, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+	LoginedUser := models.User{}
+	_, err = LoginedUser.FindUserByID(server.DB, tokenID)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+	if LoginedUser.Role != 2 {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Lütfen Admin Yetkisine Sahip Olunuz"))
+		return
+	}
 	vars := mux.Vars(r)
 	uid, err := strconv.ParseUint(vars["id"], 10, 32)
 	if err != nil {
@@ -92,11 +127,6 @@ func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &user)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
-		return
-	}
-	tokenID, err := auth.ExtractTokenID(r)
-	if err != nil {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
 	if tokenID != uint32(uid) {

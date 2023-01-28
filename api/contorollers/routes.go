@@ -70,19 +70,19 @@ func UserRoutes(s *Server) []Route {
 			Uri:          "/users",
 			Method:       http.MethodGet,
 			Handler:      s.GetUsers,
-			AuthRequired: false,
+			AuthRequired: true,
 		},
 		Route{
 			Uri:          "/users",
 			Method:       http.MethodPost,
 			Handler:      s.CreateUser,
-			AuthRequired: false,
+			AuthRequired: true,
 		},
 		Route{
 			Uri:          "/users/{id}",
 			Method:       http.MethodGet,
 			Handler:      s.GetUser,
-			AuthRequired: false,
+			AuthRequired: true,
 		},
 		Route{
 			Uri:          "/users/{id}",

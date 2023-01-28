@@ -15,7 +15,7 @@ import (
 
 // token oluşturma
 func CreateToken(userId uint) (string, error) {
-	claims := jwt.MapClaims{}
+	claims := jwt.MapClaims{} // token içerisindeki verileri tutacak
 	claims["authorized"] = true
 	claims["user_id"] = userId
 	claims["exp"] = time.Now().Add(time.Hour * 1).Unix() // token 1 saat sonra patlayacak
