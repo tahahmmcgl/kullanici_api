@@ -17,10 +17,10 @@ type User struct {
 	Password  string    `gorm:"type:varchar(100);not null"json:"password"`
 	CreatedAt time.Time `gorm:"default:'0000-00-00 00:00:00'"json:"created_at"`
 	UpdatedAt time.Time `gorm:"default:'0000-00-00 00:00:00'"json:"updated_at"`
-	Role      uint8     `gorm:"default:1"json:"role"`
+	Role      uint16    `gorm:"not null;default:1"json:"role"` // 1:user, 2: admin
 }
 type Role struct {
-	ID       uint   `gorm:"primary key:auto_increment"json:"id:`
+	RoleID   uint   `gorm:"primary key:auto_increment"json:"role_id:`
 	UserRole string `gorm:"type:varchar(100);nut null;unique"json:"user_role"`
 }
 

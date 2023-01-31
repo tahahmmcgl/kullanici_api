@@ -17,7 +17,6 @@ import (
 
 func (server *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
-	LoginedUser := models.User{}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -28,17 +27,6 @@ func (server *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	tokenID, err := auth.ExtractTokenID(r)
-	if err != nil {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
-		return
-	}
-	LoginUserRole, err := LoginedUser.FindUserByID(server.DB, uint32(tokenID))
-	if err != nil {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
-		return
-	}
-
 	user.Prepare()
 	err = user.Validate("")
 	if err != nil {
@@ -46,23 +34,17 @@ func (server *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if LoginUserRole.Role == 2 {
-		userCreated, err := user.SaveUser(server.DB)
+	userCreated, err := user.SaveUser(server.DB)
 
-		if err != nil {
+	if err != nil {
 
-			formattedError := utils.FormatError(err.Error())
+		formattedError := utils.FormatError(err.Error())
 
-			responses.ERROR(w, http.StatusInternalServerError, formattedError)
-			return
-		}
-		w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, userCreated.ID))
-		responses.JSON(w, http.StatusCreated, userCreated)
-	} else {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Lütfen Admin Yetkisine Sahip Olunuz"))
+		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
-
 	}
+	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, userCreated.ID))
+	responses.JSON(w, http.StatusCreated, userCreated)
 
 }
 
@@ -113,11 +95,13 @@ func (server *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
+	//Check if the user id is valid
 	uid, err := strconv.ParseUint(vars["id"], 10, 32)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
+	//Check if the request body is valid
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)

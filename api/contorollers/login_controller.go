@@ -60,7 +60,7 @@ func (server *Server) IsAdminUser() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if user.Role == 1 {
+	if user.Role == 2 {
 		return true, nil
 	}
 	return false, nil

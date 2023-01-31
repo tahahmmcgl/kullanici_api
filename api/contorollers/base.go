@@ -33,10 +33,7 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 	}
 	//database migration
 	//database tablolarını oluşturmak için kullanılır
-	server.DB.AutoMigrate(&models.User{})
-	server.DB.AutoMigrate(&models.Task{})
-	server.DB.AutoMigrate(&models.Role{})
-	//server.DB.Debug().AutoMigrate(&models.User{})
+	server.DB.AutoMigrate(&models.User{}, &models.Role{})
 	server.Router = mux.NewRouter()
 
 	//initialize routes
@@ -45,6 +42,6 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 }
 
 func (server *Server) Run(addr string) {
-	fmt.Println("Listening to port 8080")
+	fmt.Println("Listening to port 4545")
 	log.Fatal(http.ListenAndServe(addr, server.Router))
 }
